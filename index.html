@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ecological Fallacy Canvas (Simpson's Paradox)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+        }
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+    </style>
+</head>
+<body class="text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+    <header class="border-b border-slate-300 bg-white/95 backdrop-blur-md sticky top-0 z-50 px-4 py-4 md:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-gradient-to-br from-indigo-600 to-violet-500 rounded-xl shadow-md shadow-indigo-100">
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-950">
+                        Paradoxical Aggregation Engine
+                    </h1>
+                    <p class="text-xs text-slate-800 tracking-wider uppercase font-semibold">Visualizing Simpson's Paradox in Psychological Data</p>
+                </div>
+            </div>
+            
+            <div class="bg-slate-100 p-1 rounded-xl border border-slate-300 flex gap-1">
+                <button id="btn-aggregate" onclick="setAggregation(true)" class="text-xs font-bold px-4 py-2 rounded-lg transition duration-200 bg-white text-slate-950 shadow-sm border border-slate-200">
+                    Aggregated View
+                </button>
+                <button id="btn-disaggregate" onclick="setAggregation(false)" class="text-xs font-bold px-4 py-2 rounded-lg transition duration-200 text-slate-700 hover:text-slate-950">
+                    Disaggregated by Age
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <div class="lg:col-span-8 space-y-6">
+            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300" id="status-banner">
+                <div class="flex items-center gap-2.5 mb-2">
+                    <span class="w-3 h-3 rounded-full bg-indigo-600 animate-pulse" id="status-indicator"></span>
+                    <h2 class="text-xl font-bold text-slate-950 font-display" id="status-title">Aggregated Overview: Positive Illusion</h2>
+                </div>
+                <p class="text-slate-800 text-sm leading-relaxed" id="status-desc">
+                    Viewing all data points combined suggests a **strong positive correlation**. It looks like higher Screen Time leads to a higher GPA score. This baseline assumption is highly misleading.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-6">
+                <div class="relative w-full h-[400px]">
+                    <canvas id="paradoxChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-4 space-y-6">
+            
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+                <div>
+                    <h3 class="text-lg font-bold font-display text-slate-950 mb-1">Active Mathematical Slopes</h3>
+                    <p class="text-xs text-slate-700 font-medium">Observe how the regression lines pivot entirely.</p>
+                </div>
+
+                <div class="space-y-3">
+                    
+                    <div class="p-3.5 rounded-xl border transition-all duration-300" id="card-global-trend">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span>Global Cohort Trend</span>
+                            <span id="badge-global" class="px-2 py-0.5 rounded text-[10px] uppercase font-display bg-indigo-100 text-indigo-900">Positive (+0.48)</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 opacity-40" id="card-g1">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span class="text-rose-700">Teens Segment (13-19)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase font-display bg-rose-100 text-rose-900">Negative (-0.35)</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 opacity-40" id="card-g2">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span class="text-emerald-700">Young Adults (20-29)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase font-display bg-emerald-100 text-emerald-900">Negative (-0.38)</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-300 opacity-40" id="card-g3">
+                        <div class="flex justify-between items-center text-xs font-bold">
+                            <span class="text-amber-700">Mature Adults (30+)</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] uppercase font-display bg-amber-100 text-amber-900">Negative (-0.41)</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="bg-slate-950 text-white p-6 rounded-2xl shadow-sm space-y-4">
+                <h4 class="font-bold text-sm font-display text-amber-400 tracking-wider uppercase">The Methodological Lesson</h4>
+                <p class="text-xs text-slate-200 leading-relaxed">
+                    By failing to control for age brackets, a researcher creates a severe <strong class="text-amber-300 font-bold">confounding variable effect</strong>. 
+                </p>
+                <p class="text-xs text-slate-200 leading-relaxed">
+                    Older demographics naturally use less screen time due to lifecycle factors and simultaneously maintain distinct grade metrics, artificially creating a positive trend line when stacked together. 
+                </p>
+                <p class="text-xs text-slate-300 font-bold bg-white/10 px-2 py-1.5 rounded text-center">
+                    Always stratify psychological fields!
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Setup raw structured statistical clustering data 
+        // Synthetic groups that reveal Simpson's Paradox beautifully
+        const groupTeens = [
+            {x: 2.0, y: 3.8}, {x: 2.5, y: 3.5}, {x: 3.0, y: 3.6}, {x: 3.5, y: 3.2}, 
+            {x: 4.0, y: 3.3}, {x: 4.5, y: 2.9}, {x: 5.0, y: 3.0}, {x: 5.5, y: 2.6},
+            {x: 6.0, y: 2.8}, {x: 6.5, y: 2.3}
+        ];
+
+        const groupYoungAdults = [
+            {x: 4.0, y: 4.4}, {x: 4.5, y: 4.1}, {x: 5.0, y: 4.2}, {x: 5.5, y: 3.8}, 
+            {x: 6.0, y: 3.9}, {x: 6.5, y: 3.5}, {x: 7.0, y: 3.6}, {x: 7.5, y: 3.2},
+            {x: 8.0, y: 3.3}, {x: 8.5, y: 2.9}
+        ];
+
+        const groupMatureAdults = [
+            {x: 6.0, y: 5.0}, {x: 6.5, y: 4.7}, {x: 7.0, y: 4.8}, {x: 7.5, y: 4.4}, 
+            {x: 8.0, y: 4.5}, {x: 8.5, y: 4.1}, {x: 9.0, y: 4.2}, {x: 9.5, y: 3.8},
+            {x: 10.0, y: 3.9}, {x: 10.5, y: 3.5}
+        ];
+
+        // Combined data sets representing our monochrome global tracking cloud
+        const globalAggregateDataset = [...groupTeens, ...groupYoungAdults, ...groupMatureAdults];
+
+        // Linear Regression Trend Calculation Coordinates
+        const aggregateTrendLine = [{x: 1, y: 2.9}, {x: 11, y: 4.6}];
+        const teenTrendLine = [{x: 1.5, y: 3.9}, {x: 7.0, y: 2.2}];
+        const youngAdultTrendLine = [{x: 3.5, y: 4.5}, {x: 9.0, y: 2.8}];
+        const matureAdultTrendLine = [{x: 5.5, y: 5.1}, {x: 11.0, y: 3.4}];
+
+        let isAggregated = true;
+        let paradoxChart;
+
+        // Initialize and draw Chart.js configuration
+        const ctx = document.getElementById('paradoxChart').getContext('2d');
+        
+        paradoxChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    // DATASET INDEX 0: Unified Aggregate Data Cloud
+                    {
+                        label: 'All Active Participants',
+                        data: JSON.parse(JSON.stringify(globalAggregateDataset)), // Deep clone data structure
+                        backgroundColor: '#475569', // slate-600 (Monochrome baseline view)
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        order: 2
+                    },
+                    // DATASET INDEX 1: Global Positive Trend Line
+                    {
+                        label: 'Global Cohort Trend',
+                        data: aggregateTrendLine,
+                        type: 'line',
+                        borderColor: '#4f46e5', // indigo-600
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false,
+                        showLine: true,
+                        order: 1
+                    },
+                    // DATASET INDEX 2: Hidden Segment Line 1 (Teens)
+                    {
+                        label: 'Teens Trend',
+                        data: [],
+                        type: 'line',
+                        borderColor: '#e11d48', // rose-600
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        showLine: true,
+                        hidden: true
+                    },
+                    // DATASET INDEX 3: Hidden Segment Line 2 (Young Adults)
+                    {
+                        label: 'Young Adult Trend',
+                        data: [],
+                        type: 'line',
+                        borderColor: '#10b981', // emerald-500
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        showLine: true,
+                        hidden: true
+                    },
+                    // DATASET INDEX 4: Hidden Segment Line 3 (Mature Adults)
+                    {
+                        label: 'Mature Adult Trend',
+                        data: [],
+                        type: 'line',
+                        borderColor: '#f59e0b', // amber-500
+                        borderWidth: 2.5,
+                        pointRadius: 0,
+                        showLine: true,
+                        hidden: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                // Lock smooth elastic animation configurations
+                animations: {
+                    properties: ['x', 'y', 'backgroundColor'],
+                    duration: 900,
+                    easing: 'easeInOutCubic'
+                },
+                plugins: {
+                    legend: {
+                        display: false // Using external tracking cards for the legend display layout
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: {
+                            display: true,
+                            text: 'Daily Screen Time (Hours)',
+                            color: '#0f172a',
+                            font: { family: 'Outfit', size: 13, weight: '600' }
+                        },
+                        min: 0,
+                        max: 12,
+                        grid: { color: '#e2e8f0' }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Academic Performance Index (GPA)',
+                            color: '#0f172a',
+                            font: { family: 'Outfit', size: 13, weight: '600' }
+                        },
+                        min: 1.5,
+                        max: 5.5,
+                        grid: { color: '#e2e8f0' }
+                    }
+                }
+            }
+        });
+
+        // Controller logic managing dataset parsing state swaps
+        function setAggregation(status) {
+            if (isAggregated === status) return; // Ignore redundancy clicks
+            isAggregated = status;
+
+            // DOM Element Targets
+            const btnAgg = document.getElementById('btn-aggregate');
+            const btnDis = document.getElementById('btn-disaggregate');
+            const banner = document.getElementById('status-banner');
+            const indicator = document.getElementById('status-indicator');
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+
+            const cardGlobal = document.getElementById('card-global-trend');
+            const cardG1 = document.getElementById('card-g1');
+            const cardG2 = document.getElementById('card-g2');
+            const cardG3 = document.getElementById('card-g3');
+
+            if (isAggregated) {
+                // UI Button State Swapping
+                btnAgg.className = "text-xs font-bold px-4 py-2 rounded-lg transition duration-200 bg-white text-slate-950 shadow-sm border border-slate-200";
+                btnDis.className = "text-xs font-bold px-4 py-2 rounded-lg transition duration-200 text-slate-700 hover:text-slate-950";
+                
+                banner.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm transition-all duration-300";
+                indicator.className = "w-3 h-3 rounded-full bg-indigo-600 animate-pulse";
+                title.textContent = "Aggregated Overview: Positive Illusion";
+                desc.innerHTML = "Viewing all data points combined suggests a **strong positive correlation**. It looks like higher Screen Time leads to a higher GPA score. This baseline assumption is highly misleading.";
+
+                cardGlobal.className = "p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/40 opacity-100";
+                cardG1.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 opacity-40";
+                cardG2.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 opacity-40";
+                cardG3.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 opacity-40";
+
+                // Map elements smoothly back into single unified cluster array mapping
+                paradoxChart.data.datasets[0].data = JSON.parse(JSON.stringify(globalAggregateDataset));
+                paradoxChart.data.datasets[0].backgroundColor = '#475569';
+                
+                // Toggle trend lines mapping visibility rules
+                paradoxChart.data.datasets[1].data = aggregateTrendLine;
+                paradoxChart.data.datasets[2].data = [];
+                paradoxChart.data.datasets[3].data = [];
+                paradoxChart.data.datasets[4].data = [];
+
+            } else {
+                // UI Disaggregated State Changes
+                btnAgg.className = "text-xs font-bold px-4 py-2 rounded-lg transition duration-200 text-slate-700 hover:text-slate-950";
+                btnDis.className = "text-xs font-bold px-4 py-2 rounded-lg transition duration-200 bg-white text-slate-950 shadow-sm border border-slate-200";
+
+                banner.className = "bg-rose-50/60 p-6 rounded-2xl border border-rose-200 shadow-sm transition-all duration-300";
+                indicator.className = "w-3 h-3 rounded-full bg-rose-600";
+                title.textContent = "Disaggregated View: The Truth Emerges";
+                desc.innerHTML = "When split by **Age Group subgroups**, the trend completely reverses! Within each distinct generation cluster, screen time has a **negative structural impact** on academic testing. The global positive slant was an ecological illusion.";
+
+                cardGlobal.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50 opacity-40";
+                cardG1.className = "p-3.5 rounded-xl border border-rose-200 bg-rose-50/40 opacity-100 shadow-sm";
+                cardG2.className = "p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 opacity-100 shadow-sm";
+                cardG3.className = "p-3.5 rounded-xl border border-amber-200 bg-amber-50/40 opacity-100 shadow-sm";
+
+                // Re-arrange individual elements array patterns inside Chart.js seamlessly 
+                // Color-code indices maps to track individual elements splitting natively
+                const coloredDataset = [];
+                
+                groupTeens.forEach(p => coloredDataset.push({x: p.x, y: p.y, color: '#e11d48'}));
+                groupYoungAdults.forEach(p => coloredDataset.push({x: p.x, y: p.y, color: '#10b981'}));
+                groupMatureAdults.forEach(p => coloredDataset.push({x: p.x, y: p.y, color: '#f59e0b'}));
+
+                paradoxChart.data.datasets[0].data = coloredDataset;
+                paradoxChart.data.datasets[0].backgroundColor = coloredDataset.map(d => d.color);
+
+                // Update sub-trend vectors paths positions smoothly
+                paradoxChart.data.datasets[1].data = [];
+                paradoxChart.data.datasets[2].data = teenTrendLine;
+                paradoxChart.data.datasets[3].data = youngAdultTrendLine;
+                paradoxChart.data.datasets[4].data = matureAdultTrendLine;
+
+                paradoxChart.data.datasets[2].hidden = false;
+                paradoxChart.data.datasets[3].hidden = false;
+                paradoxChart.data.datasets[4].hidden = false;
+            }
+
+            // Execute automated animation update cycle tracking tick
+            paradoxChart.update();
+        }
+
+        // Initialize active highlight colors on initial render cycle execution loop
+        document.getElementById('card-global-trend').className = "p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/40 opacity-100 shadow-sm";
+    </script>
+</body>
+</html>
